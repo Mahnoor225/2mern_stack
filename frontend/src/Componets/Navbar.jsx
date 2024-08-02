@@ -88,8 +88,11 @@ const Navbar = () => {
               <VscAccount className="relative" />
             </div>
             <div className={`relative right-10 top-1 ${isDarkMode ? 'text-gray-800' : 'text-white'} sm:block hidden`}>
+              <Link to="/register" className="whitespace-nowrap cursor-pointer px-2">
+                Register
+              </Link>
               <Link to="/login" className="whitespace-nowrap cursor-pointer px-2">
-                Account
+                Login
               </Link>
             </div>
             <div className={`heart relative right-12 top-[4px] ${isDarkMode ? 'text-gray-800' : 'text-white'} text-[24px] sm:block hidden`}>
@@ -140,8 +143,11 @@ const Navbar = () => {
               <div className="sign flex gap-4 mb-4">
                 <VscAccount className={`relative top-[5px] ${isDarkMode ? 'text-gray-800' : 'text-white'}`} />
                 <div>
-                  <Link to="/login" className={`text-white ${isDarkMode ? 'text-gray-800' : ''}`}>
-                    Account
+                  <Link to="/register" className={`text-white ${isDarkMode ? 'text-gray-800' : ''}`}>
+                    Register
+                  </Link>
+                  <Link to="/login" className={`text-white px-6 ${isDarkMode ? 'text-gray-800' : ''}`}>
+                    Login
                   </Link>
                 </div>
               </div>
