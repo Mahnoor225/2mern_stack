@@ -13,9 +13,9 @@ const handleShowPassword = () => {
 const handleShowConfirmPassword = () => {
   setShowConfirmPassword((prev) => !prev);
 };
-// show the loading in register 
+// show the loading in register button
 const [loading, setLoading] = useState(false);
-// show the user detail in console 
+// show the user detail in console
 const [data,SetData] = useState({
   name: "",
   email: "",
@@ -24,6 +24,35 @@ const [data,SetData] = useState({
   profilepic: null,
 })
 
+// upload image with Cloudinary
+const [image, setImage] = useState(null);
+const [imagePreview, setImagePreview] = useState(null);
+const imageChange = (e) => {
+  const file = e.target.files[0];
+  setImagePreview(URL.createObjectURL(file));
+  setImage(file);
+};
+
+
+const uploadImage = async () => {
+  if (!image) return null;
+  const data = new FormData();
+  data.append('file', image);
+  data.append('upload_preset', 'mahnoor');
+  try {
+    let response = await fetch('https://api.cloudinary.com/v1_1/dizrz6ejl/image/upload', {
+      method: 'POST',
+      body: data,
+    });
+    let urlData = await response.json();
+    return urlData.secure_url; // Ensure to use secure_url
+  } catch (error) {
+    console.log(error);
+    throw new Error('Image upload failed');
+  }
+};
+
+// show the user detail in console
 const handleInput = (e) => {
   SetData({
     ...data,
@@ -31,10 +60,27 @@ const handleInput = (e) => {
   });
 };
 
-const handleSubmit = (e) => {
+const handleSubmit = async (e) => {
   e.preventDefault();
   console.log(data);
+  try {
+    // Upload image if available
+    let imageUrl = null;
+    if (image) {
+      imageUrl = await uploadImage();
+    }
 
+    const userData = {
+      ...data,
+      image: imageUrl,
+    };
+
+    console.log(userData); // Handle form data here (e.g., send to server)
+  } catch (error) {
+    console.error('Error during form submission:', error);
+  } finally {
+    setLoading(false); // End loading
+  }
 };
 
   return (
@@ -56,7 +102,7 @@ const handleSubmit = (e) => {
           <div className="relative">
           <img
             className="w-20 h-20 rounded-full drop-shadow-md shadow-md mx-auto"
-            src={loginSignupImage}
+            src={imagePreview || loginSignupImage}
             alt="Profile Preview"
           />
           <label htmlFor="profileImage" className="absolute bottom-0 w-full bg-slate-500 bg-opacity-50 text-center cursor-pointer">
@@ -66,6 +112,7 @@ const handleSubmit = (e) => {
               id="profileImage"
               accept="image/*"
               className="hidden"
+              onChange={imageChange}
             />
           </label>
         </div>
@@ -155,7 +202,7 @@ const handleSubmit = (e) => {
               <button
                     type="submit"
                     disabled={loading}
-                    className="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-[#62a403] hover:bg-[#7db430] focus:outline-none focus:border-indigo-700 focus:shadow-outline-indigo active:bg-indigo-700 transition duration-150 ease-in-out"
+                    className="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-[#62a403] hover:bg-[#7db430] focus:outline-none focus:border-[#62a403] focus:shadow-outline-indigo active:bg-[#62a403] transition duration-150 ease-in-out"
                   >
                     {loading ? 'Loading...' : 'Register'}
                   </button>
