@@ -58,6 +58,7 @@ export const Registeruser = async (req, res) => {
       id: newUser._id,
       message: "User registered successfully",
       token,
+      profilepic,
     });
   } catch (error) {
     console.error('Registration error:', error); // Log error for debugging
@@ -69,60 +70,64 @@ export const Registeruser = async (req, res) => {
 };
 
 
-// Loginuser Logic
 export const Loginuser = async (req, res) => {
-    try {
+  try {
       const { email, password } = req.body;
-  
+
       if (!email || !password) {
-        return res.status(400).json({
-          status: 400,
-          message: "All fields are required",
-        });
+          return res.status(400).json({
+              status: 400,
+              message: "All fields are required",
+          });
       }
-  
+
       // Find user by email
       const userLogin = await User.findOne({ email });
       if (!userLogin) {
-        return res.status(400).json({
-          status: 400,
-          message: "User not registered",
-        });
+          return res.status(400).json({
+              status: 400,
+              message: "User not registered",
+          });
       }
-  
+
       // Compare passwords
       const isMatch = await bcrypt.compare(password, userLogin.password);
+
       if (!isMatch) {
-        return res.status(400).json({
-          status: 400,
-          message: "Password does not match",
-        });
+          return res.status(400).json({
+              status: 400,
+              message: "Password does not match",
+          });
       }
-  
+
       // Generate JWT token
-      const token = jwt.sign({ id: userLogin._id }, process.env.secretKey, {
-        expiresIn: "7d",
-      });
-  
+      const tokenData = {
+          _id: userLogin._id,
+          email: userLogin.email,
+      };
+      const token = jwt.sign(tokenData, process.env.secretKey, { expiresIn: '8h' });
+
       // Set token as HTTP-only cookie
       const cookieOptions = {
-        httpOnly : true,
-        secure : true,
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production', // Only set secure flag in production
+          maxAge: 8 * 60 * 60 * 1000, // 8 hours in milliseconds
       };
-  
-      res.cookie('token', token, cookieOptions).status(200).json({
-        status: 200,
-        id: userLogin._id,
-        message: "User logged in successfully",
-        success: true,
-        error: false,
+
+      res.cookie("token", token, cookieOptions).status(200).json({
+          message: "Login successfully",
+          data: token,
+          profilepic: userLogin.profilepic, // Include the profilepic in the response
+          success: true,
+          error: false
       });
-    } catch (error) {
-      console.error('Login error:', error); // Log error for debugging
+  } catch (error) {
+      console.error('Login error:', error);
       return res.status(500).json({
-        status: 500,
-        message: error.message,
+          status: 500,
+          message: error.message,
       });
-    }
-  };
+  }
+};
+
+
