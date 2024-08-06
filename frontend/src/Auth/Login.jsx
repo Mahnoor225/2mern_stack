@@ -4,6 +4,7 @@ import loginSignupImage from "../../public/images/login-animation.gif"; // Ensur
 import { useNavigate } from 'react-router-dom';
 import { toast} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css"; // Import the CSS for toast notifications
+import Context from "../Context";
 // import Context from "../Context";
 
 const Login = () => {
@@ -62,7 +63,9 @@ const Login = () => {
   };
 
   const navigate = useNavigate();
+  const {  fetchUserDetails }= useContext(Context)
 
+  
   const handleInput = (e) => {
     setData({
       ...data,
@@ -117,6 +120,7 @@ const Login = () => {
         // localStorage.setItem('token', result.token);
         toast.success('Login successful');
         navigate('/');
+        fetchUserDetails()
         // Redirect or perform any other action on success
       } else {
         setError(result.message || 'Login failed');

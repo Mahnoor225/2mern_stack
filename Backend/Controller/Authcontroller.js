@@ -114,7 +114,7 @@ export const Loginuser = async (req, res) => {
           maxAge: 8 * 60 * 60 * 1000, // 8 hours in milliseconds
       };
 
-      res.cookie("token", token, cookieOptions).status(200).json({
+      res.cookie('token', token, cookieOptions).status(200).json({
           message: "Login successfully",
           data: token,
           profilepic: userLogin.profilepic, // Include the profilepic in the response
@@ -129,5 +129,31 @@ export const Loginuser = async (req, res) => {
       });
   }
 };
+
+
+
+export const userlogout = (req, res) => {
+  try {
+    // Clear the cookie with the specified path
+    res.clearCookie("token", { path: '/' });
+
+    res.json({
+      message: "Logged out successfully",
+      error: false,
+      success: true,
+      data: []
+    });
+  } catch (error) {
+    console.error('Logout Error:', error); // Log the error for internal debugging
+    
+    res.status(500).json({
+      message: "An internal error occurred. Please try again later.",
+      error: true,
+      success: false,
+      data: []
+    });
+  }
+};
+
 
 

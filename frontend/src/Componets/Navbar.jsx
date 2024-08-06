@@ -5,7 +5,11 @@ import { SlBasket } from "react-icons/sl";
 import { TbPhone } from "react-icons/tb";
 import { IoIosArrowDown } from "react-icons/io";
 import { useState, useEffect } from 'react';
-
+import { useSelector, useDispatch } from "react-redux";
+import { MdAccountCircle } from "react-icons/md";
+import { logoutUser } from "../redux/userslice";
+import 'react-toastify/dist/ReactToastify.css'; // Import the CSS
+import { toast } from 'react-toastify';
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -29,21 +33,50 @@ const Navbar = () => {
     });
   };
 
+  const user = useSelector(state => state?.user?.user);
+  const dispatch = useDispatch();
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/registeruser/userlogout", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok.");
+      }
+
+      const data = await response.json();
+      console.log("Logout successful:", data);
+
+      dispatch(logoutUser()); // Update Redux state on logout
+      toast.success("Successfully logged out"); // Show success toast
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast.error("Logout failed. Please try again."); // Show error toast
+    }
+  };
+
+  
   return (
     <div className={isDarkMode ? 'dark' : ''}>
       <nav className={`bg-[#62a403] ${isDarkMode ? 'dark:bg-gray-800' : ''}`}>
         <div className="hidden sm:block">
           <div className='flex flex-wrap justify-between border-b border-white px-4'>
             <div className="flex items-center gap-3">
-              <TbPhone className={`text-white ${isDarkMode ? 'text-gray-800' : ''}`} />
-              <h6 className={`text-white ${isDarkMode ? 'text-gray-800' : ''}`}>You can contact us 24/7</h6>
+              <TbPhone className={`${isDarkMode ? 'text-gray-800' : 'text-white'}`} />
+              <h6 className={`${isDarkMode ? 'text-gray-800' : 'text-white'}`}>You can contact us 24/7</h6>
               <h6 className={`text-[#fcc313] ${isDarkMode ? 'text-yellow-400' : ''}`}>0 800 300-353</h6>
             </div>
             <div className='flex gap-7 items-center'>
               <div className='group relative'>
                 <div className="flex items-center gap-2">
-                  <h6 className={`text-white ${isDarkMode ? 'text-gray-800' : ''}`}>English</h6>
-                  <IoIosArrowDown className={`text-white ${isDarkMode ? 'text-gray-800' : ''}`} />
+                  <h6 className={`${isDarkMode ? 'text-gray-800' : 'text-white'}`}>English</h6>
+                  <IoIosArrowDown className={` ${isDarkMode ? 'text-gray-800' : 'text-white'}`} />
                 </div>
                 <div className='hidden absolute z-10 cursor-default group-hover:block bg-white mt-1 w-24 pt-2 rounded-md text-center'>
                   <h1>Spanish</h1>
@@ -53,8 +86,8 @@ const Navbar = () => {
               </div>
               <div className='group relative'>
                 <div className="flex items-center gap-2">
-                  <h6 className={`text-white ${isDarkMode ? 'text-gray-800' : ''}`}>USD</h6>
-                  <IoIosArrowDown className={`text-white ${isDarkMode ? 'text-gray-800' : ''}`} />
+                  <h6 className={` ${isDarkMode ? 'text-gray-800' : 'text-white'}`}>USD</h6>
+                  <IoIosArrowDown className={`${isDarkMode ? 'text-gray-800' : 'text-white'}`} />
                 </div>
                 <div className='hidden absolute z-10 group-hover:block bg-white w-16 pt-1 rounded-md text-center cursor-default'>
                   <h1>EUR</h1>
@@ -85,15 +118,20 @@ const Navbar = () => {
               <span />
             </div>
             <div className={`money relative text-[23px] right-10 top-1 ${isDarkMode ? 'text-gray-800' : 'text-white'} sm:block hidden`}>
-              <VscAccount className="relative" />
+           {
+            user?.profilepic?(
+              <img src={user?.profilepic} alt="user?.name" className="w-8 h-8 rounded-full" />
+            ):(
+              <MdAccountCircle className=" text-[30px]" />
+            )
+           }
             </div>
             <div className={`relative right-10 top-1 ${isDarkMode ? 'text-gray-800' : 'text-white'} sm:block hidden`}>
-              <Link to="/register" className="whitespace-nowrap cursor-pointer px-2">
-                Register
-              </Link>
-              <Link to="/login" className="whitespace-nowrap cursor-pointer px-2">
-                Login
-              </Link>
+              {user?._id ? (
+                <button onClick={handleLogout} className={`px-3 bg-white text-black py-1 rounded-full ${isDarkMode ? 'text-gray-800' : 'text-white'}`}>Logout</button>
+              ) : (
+                <Link to="/login" className={`px-3 py-1 rounded-full ${isDarkMode ? 'text-gray-800' : 'text-white'}`}>Account</Link>
+              )}
             </div>
             <div className={`heart relative right-12 top-[4px] ${isDarkMode ? 'text-gray-800' : 'text-white'} text-[24px] sm:block hidden`}>
               <IoMdHeartEmpty />
