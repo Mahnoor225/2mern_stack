@@ -1,36 +1,25 @@
-import { useContext, useState } from "react";
+import { useState, useContext } from "react";
 import { BiShow, BiHide } from "react-icons/bi";
 import loginSignupImage from "../../public/images/login-animation.gif"; // Ensure this path is correct
 import { useNavigate } from 'react-router-dom';
-import { toast} from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css"; // Import the CSS for toast notifications
 import Context from "../Context";
-// import Context from "../Context";
+import { useForm } from "react-hook-form";
 
 const Login = () => {
   // States for showing/hiding passwords
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    // Function to handle password visibility toggle
-    const handleShowPassword = () => {
-      setShowPassword((prev) => !prev);
-    };
-  
-    const handleShowConfirmPassword = () => {
-      setShowConfirmPassword((prev) => !prev);
-    };
-  
 
-  // State for loading and error
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  // Function to handle password visibility toggle
+  const handleShowPassword = () => {
+    setShowPassword(prev => !prev);
+  };
 
-  // State for form data
-  const [data, setData] = useState({
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
+  const handleShowConfirmPassword = () => {
+    setShowConfirmPassword(prev => !prev);
+  };
 
   // State for image upload
   const [image, setImage] = useState(null);
@@ -63,35 +52,21 @@ const Login = () => {
   };
 
   const navigate = useNavigate();
-  const {  fetchUserDetails }= useContext(Context)
+  const { fetchUserDetails } = useContext(Context);
+  const { register, handleSubmit, formState: { errors }, watch } = useForm();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  
-  const handleInput = (e) => {
-    setData({
-      ...data,
-      [e.target.name]: e.target.value,
-    });
-  };
+  const onSubmit = async (data) => {
+    const { password, confirmpassword } = data;
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (password !== confirmpassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
     setLoading(true);
     setError("");
-
-    // Validation
-    if (!data.email || !data.password || !data.confirmPassword) {
-      setError("All fields are required");
-      toast.error("All fields are required");
-      setLoading(false);
-      return;
-    }
-
-    if (data.password !== data.confirmPassword) {
-      setError("Passwords do not match");
-      toast.error("Passwords do not match");
-      setLoading(false);
-      return;
-    }
 
     try {
       const imageUrl = image ? await uploadImage() : null;
@@ -99,7 +74,7 @@ const Login = () => {
       const userData = {
         email: data.email,
         password: data.password,
-        confirmPassword: data.confirmPassword, // Match server-side field name
+        confirmPassword: data.confirmpassword, // Match server-side field name
         profilePic: imageUrl,
       };
 
@@ -117,11 +92,9 @@ const Login = () => {
       const result = await response.json();
 
       if (response.ok) {
-        // localStorage.setItem('token', result.token);
         toast.success('Login successful');
         navigate('/');
-        fetchUserDetails()
-        // Redirect or perform any other action on success
+        fetchUserDetails();
       } else {
         setError(result.message || 'Login failed');
         toast.error(result.message || 'Login failed');
@@ -165,21 +138,25 @@ const Login = () => {
               </label>
             </div>
           </div>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit(onSubmit)}>
             <div>
               <label htmlFor="email" className="block mt-5 text-sm font-medium leading-5 text-gray-700">
                 Email address
               </label>
               <div className="mt-1 relative rounded-md shadow-sm">
                 <input
-                  name="email"
+                  {...register("email", { 
+                    required: "Please provide a valid email",
+                    pattern: {
+                      value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                      message: "Please enter a valid email address"
+                    }
+                  })}
                   type="email"
                   autoComplete="email"
-                  required
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:shadow-outline-blue focus:border-blue-300 transition duration-150 ease-in-out sm:text-sm sm:leading-5"
-                  value={data.email}
-                  onChange={handleInput}
                 />
+                {errors.email && <span className="text-red-600">{errors.email.message}</span>}
               </div>
             </div>
             <div className="mt-6">
@@ -190,13 +167,17 @@ const Login = () => {
                 <input
                   type={showPassword ? "text" : "password"}
                   id="password"
-                  name="password"
+                  {...register("password", { 
+                    required: "Please provide a password",
+                    pattern: {
+                      value: /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/,
+                      message: "Password must be at least 8 characters long and include one number, one uppercase letter, and one lowercase letter"
+                    }
+                  })}
                   autoComplete="current-password"
-                  required
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:shadow-outline-blue focus:border-blue-300 transition duration-150 ease-in-out sm:text-sm sm:leading-5"
-                  value={data.password}
-                  onChange={handleInput}
                 />
+                {errors.password && <span className="text-red-600">{errors.password.message}</span>}
                 <span
                   className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer"
                   onClick={handleShowPassword}
@@ -206,20 +187,25 @@ const Login = () => {
               </div>
             </div>
             <div className="mt-6">
-              <label htmlFor="confirmPassword" className="block text-sm font-medium leading-5 text-gray-700">
+              <label htmlFor="confirmpassword" className="block text-sm font-medium leading-5 text-gray-700">
                 Confirm Password
               </label>
               <div className="mt-1 relative rounded-md shadow-sm">
                 <input
                   type={showConfirmPassword ? "text" : "password"}
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  autoComplete="current-password"
-                  required
+                  id="confirmpassword"
+                  {...register("confirmpassword", { 
+                    required: "Confirm password is required",
+                    validate: value => value === watch('password') || "Passwords must match",
+                    pattern: {
+                      value: /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/,
+                      message: "Password must be at least 8 characters long and include one number, one uppercase letter, and one lowercase letter"
+                    }
+                  })}
+                  autoComplete="new-password"
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:shadow-outline-blue focus:border-blue-300 transition duration-150 ease-in-out sm:text-sm sm:leading-5"
-                  value={data.confirmPassword}
-                  onChange={handleInput}
                 />
+                {errors.confirmpassword && <span className="text-red-600">{errors.confirmpassword.message}</span>}
                 <span
                   className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer"
                   onClick={handleShowConfirmPassword}

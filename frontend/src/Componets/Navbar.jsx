@@ -11,6 +11,9 @@ import { logoutUser } from "../redux/userslice";
 import 'react-toastify/dist/ReactToastify.css'; // Import the CSS
 import { toast } from 'react-toastify';
 const Navbar = () => {
+  const [menuDisplay, setMenuDisplay] = useState(false);
+
+  // dak mode state 
   const [isOpen, setIsOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
@@ -54,7 +57,8 @@ const Navbar = () => {
       console.log("Logout successful:", data);
 
       dispatch(logoutUser()); // Update Redux state on logout
-      toast.success("Successfully logged out"); // Show success toast
+      toast.success("Successfully logged out");
+      
     } catch (error) {
       console.error("Logout error:", error);
       toast.error("Logout failed. Please try again."); // Show error toast
@@ -117,18 +121,26 @@ const Navbar = () => {
             <div className="hidden mt-2 mr-4 sm:inline-block">
               <span />
             </div>
-            <div className={`money relative text-[23px] right-10 top-1 ${isDarkMode ? 'text-gray-800' : 'text-white'} sm:block hidden`}>
-           {
-            user?.profilepic?(
-              <img src={user?.profilepic} alt="user?.name" className="w-8 h-8 rounded-full" />
-            ):(
-              <MdAccountCircle className=" text-[30px]" />
-            )
-           }
+          
+            <div className=" flex justify-center" onClick={() => setMenuDisplay(prev => !prev)}>
+              <div className={`relative text-[23px] right-10 top-1 ${isDarkMode ? 'text-gray-800' : 'text-white'} sm:block hidden`}>
+                {user?.profilepic ? (
+                  <img src={user?.profilepic} alt="user.name" className="w-8 h-8 rounded-full" />
+                ) : (
+                  <MdAccountCircle className="text-[30px]" />
+                )}
+              </div>
+              {menuDisplay && (
+                <div className="absolute bg-pink-600 bottom-0 top-28 mr-20 p-1 h-fit shadow-lg rounded">
+                  <nav>
+                    <Link to='/admin-panel' className="hover:bg-slate-100 p-2">Admin panel</Link>
+                  </nav>
+                </div>
+              )}
             </div>
             <div className={`relative right-10 top-1 ${isDarkMode ? 'text-gray-800' : 'text-white'} sm:block hidden`}>
               {user?._id ? (
-                <button onClick={handleLogout} className={`px-3 bg-white text-black py-1 rounded-full ${isDarkMode ? 'text-gray-800' : 'text-white'}`}>Logout</button>
+                <button onClick={handleLogout} className={`px-3 bg-white text-black py-1 rounded-full ${isDarkMode ? 'text-gray-800' : 'text-black'}`}>Logout</button>
               ) : (
                 <Link to="/login" className={`px-3 py-1 rounded-full ${isDarkMode ? 'text-gray-800' : 'text-white'}`}>Account</Link>
               )}
