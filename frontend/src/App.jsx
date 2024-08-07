@@ -11,6 +11,9 @@ import { useEffect } from "react";
 import Context from "./Context";
 import { useDispatch } from 'react-redux';
 import { setUserDetails } from "./redux/userslice";
+import Admin_panel from "./pages/Admin_panel";
+import Allusers from "./pages/Allusers";
+import AllProducts from "./pages/AllProducts";
 const App = () => {
   // const fetchUserDetails = async () => {
   //   try {
@@ -61,7 +64,7 @@ const App = () => {
       console.error('Error fetching user details:', error);
     }
   };
-  
+
   useEffect(() => {
     fetchUserDetails();
   }, []);
@@ -79,6 +82,9 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/forgetpassword" element={<Forgetpassword />} />
           <Route path="/reset-password/:id/:token" element={<Resetpassword />} />
+          <Route path="/admin-panel" element={<Admin_panel/>} />
+          <Route path="/allusers" element={<Allusers/>} />
+          <Route path="/allproducts" element={<AllProducts/>} />
         </Routes>
       </Layout>
       </Context.Provider>

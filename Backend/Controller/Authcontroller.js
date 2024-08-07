@@ -2,8 +2,8 @@
 import User from "../Model/Authmodel.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import dotenv from "dotenv";
-
+import userModel from "../Model/Authmodel.js";
+import mongoose from "mongoose";
 
 // Registeruser 
 export const Registeruser = async (req, res) => {
@@ -44,6 +44,7 @@ export const Registeruser = async (req, res) => {
       email,
       password: hashedPassword,
       profilepic, // Save the image URL or path
+      isAdmin: false,
     });
 
     await newUser.save();
@@ -73,6 +74,7 @@ export const Registeruser = async (req, res) => {
 export const Loginuser = async (req, res) => {
   try {
       const { email, password } = req.body;
+      console.log('Received email and password:', email, password);
 
       if (!email || !password) {
           return res.status(400).json({
@@ -81,8 +83,9 @@ export const Loginuser = async (req, res) => {
           });
       }
 
-      // Find user by email
       const userLogin = await User.findOne({ email });
+      console.log('Found user:', userLogin);
+
       if (!userLogin) {
           return res.status(400).json({
               status: 400,
@@ -90,8 +93,8 @@ export const Loginuser = async (req, res) => {
           });
       }
 
-      // Compare passwords
       const isMatch = await bcrypt.compare(password, userLogin.password);
+      console.log('Password match:', isMatch);
 
       if (!isMatch) {
           return res.status(400).json({
@@ -100,24 +103,23 @@ export const Loginuser = async (req, res) => {
           });
       }
 
-      // Generate JWT token
       const tokenData = {
           _id: userLogin._id,
           email: userLogin.email,
       };
       const token = jwt.sign(tokenData, process.env.secretKey, { expiresIn: '8h' });
+      console.log('Generated token:', token);
 
-      // Set token as HTTP-only cookie
       const cookieOptions = {
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production', // Only set secure flag in production
-          maxAge: 8 * 60 * 60 * 1000, // 8 hours in milliseconds
+          secure: process.env.NODE_ENV === 'production',
+          maxAge: 8 * 60 * 60 * 1000,
       };
 
       res.cookie('token', token, cookieOptions).status(200).json({
           message: "Login successfully",
           data: token,
-          profilepic: userLogin.profilepic, // Include the profilepic in the response
+          profilepic: userLogin.profilepic,
           success: true,
           error: false
       });
@@ -129,6 +131,7 @@ export const Loginuser = async (req, res) => {
       });
   }
 };
+
 
 
 
@@ -154,6 +157,81 @@ export const userlogout = (req, res) => {
     });
   }
 };
+
+
+export const allUsers = async (req, res) => {
+  try {
+    // Logging userId for debugging
+    console.log("User ID for all Users:", req.userId);
+
+    // Check if req.userId is not crucial
+    // You might want to remove this check if it's not required
+    if (!req.userId) {
+      console.warn("User ID is missing, but it's not required for this endpoint.");
+    }
+
+    const allUsers = await userModel.find();
+    
+    res.json({
+      message: "All Users",
+      data: allUsers,
+      success: true,
+      error: false
+    });
+  } catch (err) {
+    console.error("Error fetching users:", err);
+    res.status(400).json({
+      message: err.message || 'An error occurred',
+      error: true,
+      success: false
+    });
+  }
+};
+
+
+export const updateUser = async (req, res) => {
+  const { id } = req.params;
+  const data = req.body;
+
+  // Validate ID (example for MongoDB ObjectId)
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid user ID",
+    });
+  }
+
+  try {
+    // Use { new: true } to return the updated document
+    const updatedUser = await User.findByIdAndUpdate(id, data, { new: true });
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "User data has been updated",
+      updatedUser,
+    });
+  } catch (error) {
+    console.error('Error updating user:', error); // Logging error details for debugging
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while updating the user",
+      error: error.message,
+    });
+  }
+};
+
+
+
+
+
+
 
 
 
