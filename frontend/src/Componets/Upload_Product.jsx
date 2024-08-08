@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Product_Cateary_name from '../Helpers/Product_Cateary_name';
 import { FaCloudUploadAlt } from "react-icons/fa";
 import Upload_image_Cloundary from '../Helpers/Upload_image_Cloundary';
+import { MdDelete } from "react-icons/md";
 const Upload_Product = () => {
   // State for form data
   const [data, setData] = useState({
@@ -15,11 +16,9 @@ const Upload_Product = () => {
     selling: ''
   });
 
-  // Upload_Product
-
-  const [uploadproductimageinput,SetUploadProductImage]= useState("")
 
   // Handle form input changes
+  // input pa type ka laya 
   const handleOnChange = (e) => {
     const { name, value } = e.target;
     setData(prevData => ({
@@ -31,18 +30,34 @@ const Upload_Product = () => {
   // Handle form submission
   const handleOnSubmit = (e) => {
     e.preventDefault();
-    // Process the form data here
     console.log(data);
-    // You can add logic to send `data` to a server or perform other actions
   };
-  
-  const handleUploadProduct= async(e)=>{
-    const file = e.target.files[0];
-    SetUploadProductImage(file.name);
-    console.log("file",file)
 
-    const UploadimageCloundary = await Upload_image_Cloundary(file)
-    console.log("upload-image", UploadimageCloundary.url)
+  const handleUploadProduct = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      const uploadImageResponse = await Upload_image_Cloundary(file);
+      setData(prev => ({
+        ...prev,
+        productImage: [...prev.productImage, uploadImageResponse.url]
+      }));
+    } catch (error) {
+      console.error("Error uploading image:", error);
+    }
+  };
+
+  const handleDeleteProductImage = (index) => {
+    setData(prevData => ({
+      ...prevData,
+      productImage: prevData.productImage.filter(( productImage, i) => i !== index)
+    }));
+  };
+
+  const handleSubmit= (e)=>{
+    e.prevantDefault()
+    console.log("data",data)
   }
 
   return (
@@ -88,41 +103,81 @@ const Upload_Product = () => {
               <option value={el.value} key={el.value + index}>{el.label}</option>
             ))}
           </select>
-          <label htmlFor='productImage' className='mt-3 block text-sm font-medium text-gray-700'>Product Image URL:</label>
-<div className='p-2 bg-slate-100 border rounded h-48 w-full flex justify-center items-center'>
-  <label htmlFor="uploadimageinput" className='w-full h-full flex flex-col justify-center items-center text-slate-500 cursor-pointer'>
-    <span className='text-4xl'><FaCloudUploadAlt /></span>
-    <p className='text-sm text-center mt-2'>Upload product image</p>
-    <input type='file' id='uploadimageinput' className='sr-only' onChange={handleUploadProduct} />
-  </label>
-</div>
-
-          <div>
-            <img src="" width={80} height={80} className='bg-slate-100 border' alt="" />
+          <label htmlFor='productImage' className='mt-3 block text-sm font-medium text-gray-700'>Product Image:</label>
+          <div className='p-2 bg-slate-100 border rounded h-48 w-full flex justify-center items-center'>
+            <label htmlFor="uploadimageinput" className='w-full h-full flex flex-col justify-center items-center text-slate-500 cursor-pointer'>
+              <span className='text-4xl'><FaCloudUploadAlt /></span>
+              <p className='text-sm text-center mt-2'>Upload product image</p>
+              <input type='file' id='uploadimageinput' className='sr-only' onChange={handleUploadProduct} />
+            </label>
           </div>
 
-          {/* <label htmlFor='description' className='mt-3'>Description:</label>
-          <textarea 
-            id='description' 
-            placeholder='Enter description' 
-            name='description'
-            value={data.description} 
-            onChange={handleOnChange}
-            className='p-2 bg-slate-100 border rounded'
-          /> */}
-          {/* <label htmlFor='selling' className='mt-3'>Selling Price:</label>
-          <input 
-            type='number' 
-            id='selling' 
-            placeholder='Enter selling price' 
-            name='selling'
-            value={data.selling} 
-            onChange={handleOnChange}
-            className='p-2 bg-slate-100 border rounded'
-          /> */}
-          <button type='submit' className='mt-4 bg-blue-500 text-white p-2 rounded'>Submit</button>
+          <div className='mt-3'>
+            {data.productImage.length > 0 ? (
+              data.productImage.map((url, index) => (
+                <div className='relative inline-block mr-2' key={index}>
+                  <img
+                    src={url}
+                    alt={`Product Image ${index}`}
+                    width={80}
+                    height={80}
+                    className='bg-slate-100 border rounded cursor-pointer'
+                  />
+                  <button 
+                    type='button' 
+                    className='absolute top-0 right-0 p-1 text-white bg-red-600 rounded-full text-xs'
+                    onClick={() => handleDeleteProductImage(index)}
+                  >
+                  <MdDelete/> 
+                  </button>
+                </div>
+              ))
+            ) : (
+              <p className='text-red-500'>*Please upload a product image</p>
+            )}
+          </div>
+
+          <label htmlFor='price' className='mt-3'>Price :</label>
+              <input 
+                type='number' 
+                id='price' 
+                placeholder='enter price' 
+                value={data.price} 
+                name='price'
+                onChange={handleOnChange} 
+                className='p-2 bg-slate-100 border rounded'
+                required
+              />
+
+
+              <label htmlFor='sellingPrice' className='mt-3'>Selling Price :</label>
+              <input 
+                type='number' 
+                id='sellingPrice' 
+                placeholder='enter selling price' 
+                value={data.sellingPrice} 
+                name='sellingPrice'
+                onChange={handleOnChange}
+                className='p-2 bg-slate-100 border rounded'
+                required
+              />
+
+             <label htmlFor='description' className='mt-3'>Description :</label>
+              <textarea 
+                className='h-28 bg-slate-100 border resize-none p-1' 
+                placeholder='enter product description' 
+                rows={3} 
+                onChange={handleOnChange} 
+                name='description'
+                value={data.description}
+              >
+              </textarea>
+
+          <button type='submit' className='mt-4 bg-blue-500 text-white p-2 rounded' onSubmit={handleSubmit}>Submit</button>
         </form>
       </div>
+
+ 
     </div>
   );
 };
